@@ -15,9 +15,9 @@ public class ClientDAO {
 
         try (PreparedStatement pst = con.prepareStatement(insertSQL, Statement.RETURN_GENERATED_KEYS)) {
             String hashedPassword = PasswordHasher.hashPassword(password);
-            pst.setString(1, client.getClientName());
+            pst.setString(1, client.getUsername());
             pst.setString(2, client.getClientTelephone());
-            pst.setString(3, client.getClientEmail());
+            pst.setString(3, client.getUserEmail());
             pst.setString(4, client.getClientAddress());
             pst.setString(5, hashedPassword);
             pst.setString(6, client.getBoreholeLocation());

@@ -1,41 +1,25 @@
 package model;
 
-import java.util.*;
-
-public class Client {
-    private int clientId;
-    private String name;
+public class Client extends User{
     private String address;
     private String telephone;
-    private String email;
-    private String password;
     private String location;
     private ClientCategory category;
-    private Date registrationDate;
 
     public Client(String name, String address, String telephone, String email, String location, ClientCategory category){
-        this.name = name;
+        super(name, email);
         this.address = address;
         this.telephone = telephone;
-        this.email = email;
         this.location = location;
         this.category = category;
     }
 
     public void setClientId(int id){
-        clientId = id;
+        this.setUserId(id);
     }
 
     public int getClientId(){
-        return clientId;
-    }
-
-    public void setClientName(String username){
-        name = username;
-    }
-
-    public String getClientName(){
-        return name;
+        return this.getUserId();
     }
 
     public void setClientAddress(String address){
@@ -44,22 +28,6 @@ public class Client {
 
     public String getClientAddress(){
         return address;
-    }
-
-    public void setClientEmail(String email){
-        this.email = email;
-    }
-
-    public String getClientEmail(){
-        return email;
-    }
-
-    public void setPassword(String password){
-        this.password = password;
-    }
-
-    public String getPassword(){
-        return password;
     }
 
     public void setClientTelephone(String telephone){
@@ -86,16 +54,8 @@ public class Client {
         return category;
     }
 
-    public void setRegistrationDate(Date date){
-        registrationDate = date;
-    }
-
-    public Date getRegistrationDate(){
-        return registrationDate;
-    }
-
     public String toString(){
-        return "ClientId: " + clientId + " Name: " + name + " Email: " + email + " Telephone: " + telephone + " Address: " + address;
+        return "ClientId: " + getClientId() + " Name: " + getUsername() + " Email: " + getUserEmail() + " Telephone: " + telephone + " Address: " + address;
     }
 
     @Override
@@ -103,6 +63,6 @@ public class Client {
         if (this == obj) return true;
         if(this == null || getClass() != obj.getClass()) return false;
         Client client = (Client) obj;
-        return name.equalsIgnoreCase(client.getClientName()) && password.equalsIgnoreCase(client.getPassword());
+        return this.getUsername().equalsIgnoreCase(client.getUsername()) && this.getPassword().equalsIgnoreCase(client.getPassword());
     }
 }
