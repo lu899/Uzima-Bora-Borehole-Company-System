@@ -857,33 +857,73 @@ public class Dashboard {
         registerFrame.setLocationRelativeTo(null);
     }
 
-    public static void registerAdmin(){
-        JFrame mainFrame = new JFrame("Uzima Bora Services");
-        mainFrame.setSize(new Dimension(950, 600));
-        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        JPanel navPanel = navBarPanel("REGISTER A NEW ADMIN", mainFrame);
-
-        JPanel mainPanel = new JPanel();
-        mainPanel.setBackground(new Color(0, 0, 0));
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-
-        JTextField email = new JTextField();
-        JTextField name = new JTextField();
-        JPasswordField passwordField = new JPasswordField();
-
-        mainFrame.setVisible(true);
-        mainFrame.setLocationRelativeTo(null);
-    }
-
-    public static void clientDashboard(){
+    public static void clientDashboard(Client client){
         JFrame dashFrame = new JFrame("Uzima Bora Client Portal");
         dashFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         dashFrame.setSize(new Dimension(900, 650));
+        dashFrame.setLayout(new BorderLayout());
+
+        List<Image> icons = new ArrayList<>();
+        icons.add(new ImageIcon(Dashboard.class.getResource("/Resources/icon16X16.png")).getImage());
+        icons.add(new ImageIcon(Dashboard.class.getResource("/Resources/icon32X32.png")).getImage());
+        icons.add(new ImageIcon(Dashboard.class.getResource("/Resources/icon64X64.png")).getImage());
+
+        dashFrame.setIconImages(icons);
+
+        // Nav Panel
 
         JPanel navPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
+        navPanel.setBackground(new Color(44, 62, 80));
+        navPanel.setPreferredSize(new Dimension(900, 80));
+        navPanel.setMaximumSize(new Dimension(900, 50));
+        navPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
+        JPanel logoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        logoPanel.setBackground(new Color(44, 62, 80));
+
+        ImageIcon icon = new ImageIcon(Dashboard.class.getResource("/Resources/icon32X32.png"));
+        JLabel logo = new JLabel(icon);
+
+        JLabel titleLabel = new JLabel("UZIMA BORA CLIENT PORTAL");
+        titleLabel.setFont(new Font("Cambria", Font.BOLD, 20));
+        titleLabel.setForeground(Color.WHITE);
+
+        logoPanel.add(logo);
+        logoPanel.add(titleLabel);
+
+        gbc.gridx = 0;
+        gbc.weightx = 0;
+        gbc.anchor = GridBagConstraints.EAST;
+        navPanel.add(logoPanel, gbc);
+        
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        navPanel.add(Box.createHorizontalGlue(), gbc);
+
+        JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        userPanel.setBackground(new Color(44, 62, 80));
+
+        JLabel userIcon = new JLabel("\ue1b0");
+        userIcon.setFont(fontAwesome.deriveFont(Font.PLAIN, 25f));
+        userIcon.setForeground(Color.WHITE);
+
+        JLabel welcomeLabel = new JLabel("Welcome, " + client.getUsername());
+        welcomeLabel.setForeground(Color.WHITE);
+        welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+
+        userPanel.add(userIcon);
+        userPanel.add(welcomeLabel);
+
+        gbc.gridx = 2;
+        gbc.weightx = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        navPanel.add(userPanel, gbc);
+
+        // Main Content Area
+
+        dashFrame.getContentPane().add(navPanel, BorderLayout.NORTH);
         dashFrame.setVisible(true);
         dashFrame.setLocationRelativeTo(null);
     }

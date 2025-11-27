@@ -1,31 +1,49 @@
 package model;
 
-import java.util.*;
+import java.time.LocalDate;
 
 public abstract class Service {
-    private int serviceId;
-    private int clientId;
-    private Date serviceDate;
-    private double totalCost;
+    protected int serviceId;
+    protected int clientId;
+    protected LocalDate serviceDate;
+    protected double totalCost;
 
     public Service(){
         super();
     }
 
+    public void setServiceID(int serviceId){
+        this.serviceId = serviceId;
+    }
+
     public int getServiceID(){
-        return this.serviceId;
+        return serviceId;
+    }
+
+    public void setClientId(int clientId){
+        this.clientId = clientId;
     }
 
     public int getClientId(){
-        return this.clientId;
+        return clientId;
+    }
+
+    public void setTotalcost(double totalCost){
+        this.totalCost = totalCost;
     }
 
     public double getTotalcost(){
         return totalCost;
     }
 
-    public double calculateCost(){
-        double total = 0;
-        return total;
+    public void setServiceDate(LocalDate serviceDate){
+        this.serviceDate = serviceDate;
     }
+
+    public LocalDate getServiceDate(){
+        return serviceDate;
+    }
+
+    public abstract double calculateCost();
+    public abstract String getServiceType();
 }
