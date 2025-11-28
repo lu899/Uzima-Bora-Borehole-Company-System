@@ -59,4 +59,9 @@ public class DrillingService extends Service{
     public String getServiceType(){
         return "Drilling Service";
     }
+
+    @Override
+    public String toString(){
+        return "Client Id: " + clientId + " Drilling Type: " + drillingType.name() + " Service Date: " + serviceDate + " Down Payment: " + downPayment + " Borehole Depth: " + boreholeDepth + "Depth Charges: " + depthCharges + " Total Cost: " + totalCost;
+    }
 }

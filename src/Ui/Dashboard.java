@@ -1,18 +1,19 @@
 package Ui;
 
 import javax.swing.*;
-import database.ClientDAO;
-import model.*;
-import util.InputValidator;
-
 import java.util.*;
 import java.util.List;
 import java.awt.*;
 import java.io.*;
 
+import database.ClientDAO;
+import model.*;
+import util.InputValidator;
+
+
 public class Dashboard {
     private static Font fontAwesome;
-    private static JFrame landingFrame;
+    private static JFrame landingFrame = new JFrame("Uzima Bora Borehole System");
     private static ClientDAO clientDAO = new ClientDAO();
     private static Client client;
 
@@ -31,7 +32,6 @@ public class Dashboard {
         }
     }
     public static void landingPage() {
-        landingFrame = new JFrame("Uzima Bora Borehole System");
         landingFrame.setSize(new Dimension(900, 650));
         landingFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         landingFrame.setLayout(new BorderLayout());
@@ -250,33 +250,7 @@ public class Dashboard {
 
         mainPanel.add(cardPanel);
 
-        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 15));
-        footerPanel.setPreferredSize(new Dimension(900, 60));
-
-        JLabel location = new JLabel("📍 Nairobi, Kenya");
-        location.setForeground(new Color(44, 62, 80));
-        location.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 14));
-
-        JLabel telephone = new JLabel("☎ +254 711340632");
-        telephone.setForeground(new Color(44, 62, 80));
-        telephone.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 14));
-
-        JLabel email = new JLabel("✉ info@uzima.co.ke");
-        email.setForeground(new Color(44, 62, 80));
-        email.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 14));
-
-        JLabel copyright = new JLabel("\u00A9 copyright 2025");
-        copyright.setForeground(new Color(44, 62, 80));
-        copyright.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 13));
-
-        footerPanel.add(location);
-        footerPanel.add(new JLabel("|") {{ setForeground(new Color(44, 62, 80)); }});
-        footerPanel.add(telephone);
-        footerPanel.add(new JLabel("|") {{ setForeground(new Color(44, 62, 80)); }});
-        footerPanel.add(email);
-        footerPanel.add(new JLabel("|") {{ setForeground(new Color(44, 62, 80)); }});
-        footerPanel.add(copyright);
-
+        JPanel footerPanel = footerPanel();
         
         landingFrame.getContentPane().add(navPanel, BorderLayout.NORTH);
         landingFrame.getContentPane().add(mainPanel, BorderLayout.CENTER);
@@ -332,6 +306,37 @@ public class Dashboard {
         navPanel.add(backBtn, gbc);
 
         return navPanel;
+    }
+
+    public static JPanel footerPanel(){
+        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 15));
+        footerPanel.setPreferredSize(new Dimension(900, 60));
+
+        JLabel location = new JLabel("📍 Nairobi, Kenya");
+        location.setForeground(new Color(44, 62, 80));
+        location.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 14));
+
+        JLabel telephone = new JLabel("☎ +254 711340632");
+        telephone.setForeground(new Color(44, 62, 80));
+        telephone.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 14));
+
+        JLabel email = new JLabel("✉ info@uzima.co.ke");
+        email.setForeground(new Color(44, 62, 80));
+        email.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 14));
+
+        JLabel copyright = new JLabel("\u00A9 copyright 2025");
+        copyright.setForeground(new Color(44, 62, 80));
+        copyright.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 13));
+
+        footerPanel.add(location);
+        footerPanel.add(new JLabel("|") {{ setForeground(new Color(44, 62, 80)); }});
+        footerPanel.add(telephone);
+        footerPanel.add(new JLabel("|") {{ setForeground(new Color(44, 62, 80)); }});
+        footerPanel.add(email);
+        footerPanel.add(new JLabel("|") {{ setForeground(new Color(44, 62, 80)); }});
+        footerPanel.add(copyright);
+
+        return footerPanel;
     }
 
     public static JFrame login(JPanel registerPanel){
@@ -394,24 +399,24 @@ public class Dashboard {
         Font defaultFont = new Font("Calibri", Font.PLAIN, 15);
         UIManager.put("TextField.font", defaultFont); 
 
-        JPanel namePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
-        namePanel.setPreferredSize(new Dimension(250, 30));
-        namePanel.setMaximumSize(new Dimension(250, 30));
+        JPanel emailPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
+        emailPanel.setPreferredSize(new Dimension(250, 30));
+        emailPanel.setMaximumSize(new Dimension(250, 30));
 
         JLabel userIcon = new JLabel("\uf2bd", SwingConstants.LEFT);
         userIcon.setFont(fontAwesome.deriveFont(Font.PLAIN, 25f));
         userIcon.setForeground(new Color(131, 157, 154));
 
-        JLabel nameLabel = new JLabel(" Enter Your Name:", SwingConstants.LEFT);
-        nameLabel.setFont(new Font("Calibri", Font.PLAIN, 20));
+        JLabel emailLabel = new JLabel(" Enter Your Email:", SwingConstants.LEFT);
+        emailLabel.setFont(new Font("Calibri", Font.PLAIN, 20));
 
-        namePanel.add(userIcon);
-        namePanel.add(nameLabel);
+        emailPanel.add(userIcon);
+        emailPanel.add(emailLabel);
 
-        JTextField name = new JTextField(30);
-        Dimension fixedSize = new Dimension(name.getPreferredSize().width, 30);
-        name.setPreferredSize(fixedSize);
-        name.setMaximumSize(fixedSize);
+        JTextField email = new JTextField(30);
+        Dimension fixedSize = new Dimension(email.getPreferredSize().width, 30);
+        email.setPreferredSize(fixedSize);
+        email.setMaximumSize(fixedSize);
 
         JPanel passwordPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
         passwordPanel.setMaximumSize(new Dimension(250, 30));
@@ -438,22 +443,22 @@ public class Dashboard {
         loginBtn.setBackground(new Color(41, 74, 102));
         loginBtn.setForeground(Color.WHITE);
         loginBtn.addActionListener(e -> {
-            if (InputValidator.validateName(name) && InputValidator.validatePassword(password)) {
-                client = clientDAO.getClient(name.getText(), password.getPassword());
+            if (InputValidator.validateEmail(email) && InputValidator.validatePassword(password)) {
+                client = clientDAO.getClient(email.getText(), password.getPassword());
                 if (client != null) {
-                    JOptionPane.showMessageDialog(loginFrame, "User logged in Successfully!!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    clientDashboard(client);
                     landingFrame.dispose();
-                } else {
-                    JOptionPane.showMessageDialog(loginFrame, "Failed User log in!!", "Failed", JOptionPane.INFORMATION_MESSAGE);
+                    loginFrame.dispose();
+                    // clientDAO.updateClientLastLogin(client.getClientId());
                 }
             }
         });
 
         detailsPanel.add(welcomeLabel);
         detailsPanel.add(Box.createVerticalGlue());
-        detailsPanel.add(namePanel);
+        detailsPanel.add(emailPanel);
         detailsPanel.add(Box.createVerticalGlue());
-        detailsPanel.add(name);
+        detailsPanel.add(email);
         detailsPanel.add(Box.createVerticalGlue());
         detailsPanel.add(passwordPanel);
         detailsPanel.add(Box.createVerticalGlue());
@@ -860,7 +865,7 @@ public class Dashboard {
     public static void clientDashboard(Client client){
         JFrame dashFrame = new JFrame("Uzima Bora Client Portal");
         dashFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        dashFrame.setSize(new Dimension(900, 650));
+        dashFrame.setSize(new Dimension(900, 600));
         dashFrame.setLayout(new BorderLayout());
 
         List<Image> icons = new ArrayList<>();
@@ -922,9 +927,136 @@ public class Dashboard {
         navPanel.add(userPanel, gbc);
 
         // Main Content Area
+        JPanel mainPanel = new JPanel();
+        mainPanel.setBackground(new Color(236, 240, 241));
+        mainPanel.setLayout(new BorderLayout(10, 0));
+
+        JPanel btnsPanel = new JPanel();
+        btnsPanel.setBackground(Color.WHITE);
+        btnsPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        btnsPanel.setLayout(new BoxLayout(btnsPanel, BoxLayout.Y_AXIS));
+
+        String[] btnsTexts = {"Apply for Service", "View My Invoices", "My Applications", "Make Payment", "My Account", "Contact Support"};
+        RoundedButton[] buttons = new RoundedButton[btnsTexts.length];
+        
+        for (int i = 0; i < btnsTexts.length; i++) {
+            buttons[i] = new RoundedButton(btnsTexts[i], 10);
+            buttons[i].setBackground(new Color(76, 149, 108));
+            buttons[i].setForeground(Color.WHITE);
+            buttons[i].setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+            buttons[i].setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            btnsPanel.add(buttons[i]);
+            btnsPanel.add(Box.createVerticalGlue());
+        }
+        
+        buttons[0].addActionListener(e -> {
+            ServiceRegistration.applicationForm(client);
+        });
+        
+        buttons[1].addActionListener(e -> {
+            // View My Invoices action
+            System.out.println("View My Invoices clicked");
+        });
+        
+        buttons[2].addActionListener(e -> {
+            // My Applications action
+            System.out.println("My Applications clicked");
+        });
+        
+        buttons[3].addActionListener(e -> {
+            // Make Payment action
+            System.out.println("Make Payment clicked");
+        });
+        
+        buttons[4].addActionListener(e -> {
+            // My Account action
+            System.out.println("My Account clicked");
+        });
+        
+        buttons[5].addActionListener(e -> {
+            // Contact Support action
+            System.out.println("Contact Support clicked");
+        });
+
+        JPanel contentPanel = new JPanel();
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(15, 30, 15, 30));
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+
+        JLabel detailsLabel = new JLabel("Account Overview");
+        detailsLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        detailsLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JPanel detailsPanel = new JPanel();
+        detailsPanel.setBackground(Color.WHITE);
+        detailsPanel.setPreferredSize(new Dimension(600, 150));
+        detailsPanel.setMaximumSize(new Dimension(600, 150));
+        detailsPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(189, 195, 199), 2, true),
+            BorderFactory.createEmptyBorder(10, 20, 10, 20)
+        ));
+        detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.Y_AXIS));
+
+        JPanel accountOverview = new JPanel(new GridLayout(1,2, 15, 0));
+        accountOverview.setBackground(Color.WHITE);
+
+        JPanel personalDetails = new JPanel();
+        personalDetails.setBackground(Color.WHITE);
+        personalDetails.setLayout(new BoxLayout(personalDetails, BoxLayout.Y_AXIS));
+
+        JLabel username = new JLabel("Name: " + client.getUsername());
+        username.setFont(new Font("Calibri", Font.PLAIN, 16));
+        JLabel phone = new JLabel("Phone: " + client.getClientTelephone());
+        phone.setFont(new Font("Calibri", Font.PLAIN, 16));
+        JLabel email = new JLabel("Email: " + client.getUserEmail());
+        email.setFont(new Font("Calibri", Font.PLAIN, 16));
+
+        personalDetails.add(username);
+        personalDetails.add(Box.createVerticalStrut(5));
+        personalDetails.add(phone);
+        personalDetails.add(Box.createVerticalStrut(5));
+        personalDetails.add(email);
+
+        JPanel accountDetails = new JPanel();
+        accountDetails.setBackground(Color.white);
+        accountDetails.setLayout(new BoxLayout(accountDetails, BoxLayout.Y_AXIS));
+
+        JLabel category = new JLabel("Client Type: " + client.getClientCategory().name());
+        category.setFont(new Font("Calibri", Font.PLAIN, 16));
+        JLabel regDate = new JLabel("Member Since: " + client.getRegistrationDate());
+        regDate.setFont(new Font("Calibri", Font.PLAIN, 16));
+        JLabel lastLogIn = new JLabel("Last LogIn: " + InputValidator.formatLastLoginForDisplay(client.getLastLogin()));
+        lastLogIn.setFont(new Font("Calibri", Font.PLAIN, 16));
+
+        accountDetails.add(category);
+        accountDetails.add(Box.createVerticalStrut(5));
+        accountDetails.add(regDate);
+        accountDetails.add(Box.createVerticalStrut(5));
+        accountDetails.add(lastLogIn);
+
+        accountOverview.add(personalDetails);
+        accountOverview.add(accountDetails);
+
+        detailsPanel.add(detailsLabel);
+        detailsPanel.add(Box.createVerticalStrut(20));
+        detailsPanel.add(accountOverview);
+
+        contentPanel.add(detailsPanel);
+
+        mainPanel.add(btnsPanel, BorderLayout.WEST);
+        mainPanel.add(contentPanel, BorderLayout.CENTER);
+
+        // Footer Panel
+        JPanel footer = footerPanel();
+        footer.setBackground(new Color(44, 62, 80));
+        for (Component c : footer.getComponents()) {
+            c.setForeground(Color.WHITE);
+        }
 
         dashFrame.getContentPane().add(navPanel, BorderLayout.NORTH);
+        dashFrame.getContentPane().add(mainPanel, BorderLayout.CENTER);
+        dashFrame.getContentPane().add(footer, BorderLayout.SOUTH);
         dashFrame.setVisible(true);
+        dashFrame.setResizable(false);
         dashFrame.setLocationRelativeTo(null);
     }
 }

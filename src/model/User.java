@@ -1,13 +1,15 @@
 package model;
 
-import java.util.*;
+import java.sql.Timestamp;
+import java.time.*;
 
 public abstract class User {
     private int userId;
     private String name;
     private String email;
     private String password;
-    private Date registrationDate;
+    private LocalDate registrationDate;
+    private Timestamp lastLogin;
 
     public User(String name, String email){
         this.name = name;
@@ -46,12 +48,20 @@ public abstract class User {
         return password;
     }
 
-    public void setRegistrationDate(Date date){
+    public void setRegistrationDate(LocalDate date){
         registrationDate = date;
     }
 
-    public Date getRegistrationDate(){
+    public LocalDate getRegistrationDate(){
         return registrationDate;
+    }
+
+    public void setLastLogin(Timestamp time){
+        this.lastLogin = time;
+    }
+
+    public Timestamp getLastLogin(){
+        return lastLogin;
     }
 
     public String toString(){

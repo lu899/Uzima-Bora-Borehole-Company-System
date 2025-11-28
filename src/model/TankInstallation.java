@@ -4,11 +4,10 @@ import java.time.LocalDate;
 
 public class TankInstallation extends Service{
     private double capcityLitres;
-    private double costPerLitre;
+    private double costPerLitre = 50;
 
-    public TankInstallation(int clientId, double capcityLitres, double cost, LocalDate date){
+    public TankInstallation(int clientId, double capcityLitres, LocalDate date){
         super();
-        this.costPerLitre = cost;
         this.clientId = clientId;
         this.serviceDate = date;
         this.capcityLitres = capcityLitres;

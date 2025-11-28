@@ -2,6 +2,7 @@ package database;
 
 import java.sql.*;
 import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import javax.swing.*;
@@ -45,10 +46,10 @@ public class ClientDAO {
         }
     }
 
-    public Client getClient(String name, char[] password){
-        String selectSQL = "SELECT * FROM clients WHERE name LIKE ?";
+    public Client getClient(String email, char[] password){
+        String selectSQL = "SELECT * FROM clients WHERE email LIKE ?";
         try (PreparedStatement pst = con.prepareStatement(selectSQL)) {
-            pst.setString(1, "%" + name + "%");
+            pst.setString(1, "%" + email + "%");
 
             ResultSet rs = pst.executeQuery();
             if (rs.next()) {
@@ -66,7 +67,8 @@ public class ClientDAO {
                                         );
                     user.setPassword(storedHash);
                     user.setClientId(rs.getInt("client_id"));
-                    JOptionPane.showMessageDialog(null, "User logged in Successfully!!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    user.setRegistrationDate(rs.getDate("registration_date").toLocalDate());
+                    user.setLastLogin(rs.getTimestamp("last_login"));
                     return user;
                       
                 } else {
@@ -104,7 +106,7 @@ public class ClientDAO {
                                         );
                 client.setClientId(rs.getInt("client_id"));
                 client.setPassword(rs.getString("password"));
-                client.setRegistrationDate(rs.getDate("registration_date"));
+                client.setRegistrationDate(rs.getDate("registration_date").toLocalDate());
                 clients.add(client);
             }
         } catch (SQLException e) {
@@ -129,8 +131,8 @@ public class ClientDAO {
     }
 
     public void insertDrillingService(Service service){
-        String insertSQL = "INSERT INTO drilling_services(client_id, drilling_type, borehole_depth, down_payment, depth_charges, total_cost, service_date) VALUES(?,?,?,?,?,?,?";
-                DrillingService drillingService = (DrillingService) service;
+        String insertSQL = "INSERT INTO drilling_services(client_id, drilling_type, borehole_depth, down_payment, depth_charges, total_cost, service_date) VALUES(?,?,?,?,?,?,?)";
+        DrillingService drillingService = (DrillingService) service;
 
         try (PreparedStatement pst = con.prepareStatement(insertSQL)) {
             pst.setInt(1, drillingService.getClientId());
@@ -138,16 +140,17 @@ public class ClientDAO {
             pst.setDouble(3, drillingService.getBoreholeDepth());
             pst.setDouble(4, drillingService.getDownPayment());
             pst.setDouble(5, drillingService.getDepthCharges());
-            pst.setDouble(6, drillingService.getTotalcost());
+            pst.setDouble(6, drillingService.getTotalCost());
             pst.setDate(7, Date.valueOf(drillingService.getServiceDate()));
             pst.executeUpdate();
+            JOptionPane.showMessageDialog(null, "Drilling Service added Successfully!!");
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null,"Error Inserting Service " + e.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     public void insertPlumbingService(Service service){
-        String insertSQL = "INSERT INTO plumbing_services(client_id, pipe_type, pipe_diameter, pipe_length, outlets, total_cost, service_date) VALUES(?,?,?,?,?,?,?";
+        String insertSQL = "INSERT INTO plumbing_services(client_id, pipe_type, pipe_diameter, pipe_length, outlets, total_cost, service_date) VALUES(?,?,?,?,?,?,?)";
         PlumbingService plumbingService = (PlumbingService) service;
 
         try (PreparedStatement pst = con.prepareStatement(insertSQL)) {
@@ -156,16 +159,17 @@ public class ClientDAO {
             pst.setDouble(3, plumbingService.getPipeDiameter());
             pst.setDouble(4, plumbingService.getPipeLength());
             pst.setDouble(5, plumbingService.getNumOfOutlets());
-            pst.setDouble(6, plumbingService.getTotalcost());
+            pst.setDouble(6, plumbingService.getTotalCost());
             pst.setDate(7, Date.valueOf(plumbingService.getServiceDate()));
             pst.executeUpdate();
+            JOptionPane.showMessageDialog(null, "Plumbing Service added Successfully!!");
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null,"Error Inserting Service " + e.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     public void insertPumpService(Service service){
-        String insertSQL = "INSERT INTO pump_installation(client_id, pump_type, pump_cost, borehole_depth, tank_height, depth_cost, height_cost,total_cost, installation_date) VALUES(?,?,?,?,?,?,?,?,?";
+        String insertSQL = "INSERT INTO pump_installation(client_id, pump_type, pump_cost, borehole_depth, tank_height, depth_cost, height_cost,total_cost, installation_date) VALUES(?,?,?,?,?,?,?,?,?)";
         PumpInstallation pumpInstallation = (PumpInstallation) service;
 
         try (PreparedStatement pst = con.prepareStatement(insertSQL)) {
@@ -176,9 +180,10 @@ public class ClientDAO {
             pst.setDouble(5, pumpInstallation.getTankHeight());
             pst.setDouble(6, pumpInstallation.calculateDepthCharges());
             pst.setDouble(7, pumpInstallation.calculateHeightCharges());
-            pst.setDouble(8, pumpInstallation.getTotalcost());
+            pst.setDouble(8, pumpInstallation.getTotalCost());
             pst.setDate(9, Date.valueOf(pumpInstallation.getServiceDate()));
             pst.executeUpdate();
+            JOptionPane.showMessageDialog(null, "Pump Installation Service added Successfully!!");
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null,"Error Inserting Service " + e.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
         }
@@ -191,9 +196,10 @@ public class ClientDAO {
         try (PreparedStatement pst = con.prepareStatement(insertSQL)) {
             pst.setInt(1, tankInstallation.getClientId());
             pst.setDouble(2, tankInstallation.getCapacity());
-            pst.setDouble(3, tankInstallation.getTotalcost());
+            pst.setDouble(3, tankInstallation.getTotalCost());
             pst.setDate(4, Date.valueOf(tankInstallation.getServiceDate()));
             pst.executeUpdate();
+            JOptionPane.showMessageDialog(null, "Tank Installation Service added Successfully!!");
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null,"Error Inserting Service " + e.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
         }
@@ -276,7 +282,7 @@ public class ClientDAO {
             ResultSet rs = pst.executeQuery();
 
             while (rs.next()) {
-                TankInstallation ds = new TankInstallation(clientId, rs.getDouble("capacity_litres"), rs.getDouble("total_cost"), rs.getDate("installation_date").toLocalDate());
+                TankInstallation ds = new TankInstallation(clientId, rs.getDouble("capacity_litres"), rs.getDate("installation_date").toLocalDate());
                 tankInstallation.add(ds);
             }
         } catch (SQLException e) {
@@ -294,5 +300,34 @@ public class ClientDAO {
         allServices.addAll(getPlumbingServicesByClient(clientId));
 
         return allServices;
+    }
+
+    public void updateClientLastLogin(int clientId){
+        String sql = "UPDATE clients SET last_login = ? WHERE client_id = ?";
+
+        try (PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            pst.setInt(2, clientId);
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Timestamp getClientLastLogin(int clientId){
+        String sql = "SELECT last_login FROM clients WHERE client_id = ?";
+
+        try (PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setInt(1, clientId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getTimestamp("last_login");
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null,"Error getting client's Last Login: " + e.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
+        }
+
+        return null;
     }
 }

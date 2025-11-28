@@ -21,6 +21,7 @@ public class PumpInstallation extends Service{
         this.serviceDate = date;
         this.depthCharges = calculateDepthCharges();
         this.heightCharges = calculateHeightCharges();
+        this.totalCost = calculateCost();
     }
 
     public double getBaseCost(){

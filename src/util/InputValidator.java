@@ -1,5 +1,9 @@
 package util;
 import javax.swing.*;
+
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.regex.*;
 
 public class InputValidator {
@@ -237,6 +241,35 @@ public class InputValidator {
             return false;
         }
         return true;
+    }
+
+     public static String formatLastLoginForDisplay(Timestamp lastLogin) {
+        if (lastLogin == null) {
+            return "First login";
+        }
+        
+        LocalDateTime dateTime = lastLogin.toLocalDateTime();
+        LocalDateTime now = LocalDateTime.now();
+        
+        // Calculate time difference
+        long minutesAgo = java.time.Duration.between(dateTime, now).toMinutes();
+        long hoursAgo = minutesAgo / 60;
+        long daysAgo = hoursAgo / 24;
+        
+        // Format based on how long ago
+        if (minutesAgo < 1) {
+            return "Just now";
+        } else if (minutesAgo < 60) {
+            return minutesAgo + " minutes ago";
+        } else if (hoursAgo < 24) {
+            return hoursAgo + " hours ago";
+        } else if (daysAgo < 7) {
+            return daysAgo + " days ago";
+        } else {
+            // Show full date
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm");
+            return dateTime.format(formatter);
+        }
     }
 
     public static boolean validateAll(JTextField nameField,

@@ -32,7 +32,7 @@ public abstract class Service {
         this.totalCost = totalCost;
     }
 
-    public double getTotalcost(){
+    public double getTotalCost(){
         return totalCost;
     }
 
