@@ -11,6 +11,7 @@ public class TankInstallation extends Service{
         this.clientId = clientId;
         this.serviceDate = date;
         this.capcityLitres = capcityLitres;
+        this.totalCost = calculateCost();
     }
 
     public double getCapacity(){
@@ -30,7 +31,8 @@ public class TankInstallation extends Service{
     }
 
     public double calculateCost(){
-        return capcityLitres * costPerLitre;
+        totalCost = capcityLitres * costPerLitre;
+        return totalCost;
     }
 
     public String getServiceType(){

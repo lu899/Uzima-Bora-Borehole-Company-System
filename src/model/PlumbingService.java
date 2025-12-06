@@ -24,6 +24,7 @@ public class PlumbingService extends Service{
         this.baseCost = pipeType.getAdditionalCost() * pipeLength;
         this.diameterCharges = calculateDiamterCharges();
         this.outletCharges = calculateOutletCharges();
+        this.totalCost = calculateCost();
     }
 
     public void setPipeDiameter(double diameter){

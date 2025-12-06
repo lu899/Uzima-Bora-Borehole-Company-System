@@ -445,11 +445,13 @@ public class Dashboard {
         loginBtn.addActionListener(e -> {
             if (InputValidator.validateEmail(email) && InputValidator.validatePassword(password)) {
                 client = clientDAO.getClient(email.getText(), password.getPassword());
+                email.setText(null);
+                password.setText(null);
                 if (client != null) {
                     clientDashboard(client);
                     landingFrame.dispose();
                     loginFrame.dispose();
-                    // clientDAO.updateClientLastLogin(client.getClientId());
+                    clientDAO.updateClientLastLogin(client.getClientId());
                 }
             }
         });
@@ -840,6 +842,7 @@ public class Dashboard {
                 clientDAO.insertClient(client, password.getPassword());
                 landingFrame.dispose();
                 registerFrame.dispose();
+                clientDashboard(client);
             }
         });
 
@@ -863,6 +866,7 @@ public class Dashboard {
     }
 
     public static void clientDashboard(Client client){
+        ServiceRegistration serviceRegistration = new ServiceRegistration(client);
         JFrame dashFrame = new JFrame("Uzima Bora Client Portal");
         dashFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         dashFrame.setSize(new Dimension(900, 600));
@@ -950,7 +954,7 @@ public class Dashboard {
         }
         
         buttons[0].addActionListener(e -> {
-            ServiceRegistration.applicationForm(client);
+            serviceRegistration.applicationForm();
         });
         
         buttons[1].addActionListener(e -> {
