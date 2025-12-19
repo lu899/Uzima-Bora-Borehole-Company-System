@@ -5,10 +5,14 @@ import java.util.*;
 import java.util.List;
 import java.awt.*;
 import java.io.*;
+import java.time.LocalDate;
 
-import database.ClientDAO;
+import database.*;
 import model.*;
+import model.Invoice.PaymentStatus;
+import util.CurrencyFormatter;
 import util.InputValidator;
+import util.PaymentValidator;
 
 
 public class Dashboard {
@@ -16,6 +20,9 @@ public class Dashboard {
     private static JFrame landingFrame = new JFrame("Uzima Bora Borehole System");
     private static ClientDAO clientDAO = new ClientDAO();
     private static Client client;
+    private static Admin admin;
+    private static AdminDAO adminDAO = new AdminDAO();
+    private static InvoiceDAO invoiceDAO = new InvoiceDAO();
 
     static {
         try {
@@ -30,6 +37,10 @@ public class Dashboard {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static Font getFontAwesome(){
+        return fontAwesome;
     }
     public static void landingPage() {
         landingFrame.setSize(new Dimension(900, 650));
@@ -444,14 +455,26 @@ public class Dashboard {
         loginBtn.setForeground(Color.WHITE);
         loginBtn.addActionListener(e -> {
             if (InputValidator.validateEmail(email) && InputValidator.validatePassword(password)) {
-                client = clientDAO.getClient(email.getText(), password.getPassword());
-                email.setText(null);
-                password.setText(null);
-                if (client != null) {
-                    clientDashboard(client);
-                    landingFrame.dispose();
-                    loginFrame.dispose();
-                    clientDAO.updateClientLastLogin(client.getClientId());
+                if (registerPanel != null) {
+                    client = clientDAO.getClient(email.getText(), password.getPassword());
+                    email.setText(null);
+                    password.setText(null);
+                    if (client != null) {
+                        clientDashboard(client);
+                        landingFrame.dispose();
+                        loginFrame.dispose();
+                        clientDAO.updateClientLastLogin(client.getClientId());
+                    }
+                } else {
+                    admin = adminDAO.getAdmin(email.getText(), password.getPassword());
+                    email.setText(null);
+                    password.setText(null);
+                    if (admin != null) {
+                        adminDashboard(admin);
+                        landingFrame.dispose();
+                        loginFrame.dispose();
+                        adminDAO.updateAdminLastLogin(admin.getUserId());
+                    }
                 }
             }
         });
@@ -940,7 +963,7 @@ public class Dashboard {
         btnsPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         btnsPanel.setLayout(new BoxLayout(btnsPanel, BoxLayout.Y_AXIS));
 
-        String[] btnsTexts = {"Apply for Service", "View My Invoices", "My Applications", "Make Payment", "My Account", "Contact Support"};
+        String[] btnsTexts = {"Apply for Service", "View My Invoices", "My Applications", "Make Payment", "My Account", "Log Out"};
         RoundedButton[] buttons = new RoundedButton[btnsTexts.length];
         
         for (int i = 0; i < btnsTexts.length; i++) {
@@ -958,18 +981,22 @@ public class Dashboard {
         });
         
         buttons[1].addActionListener(e -> {
-            // View My Invoices action
-            System.out.println("View My Invoices clicked");
+            viewInvoices(client);
         });
         
         buttons[2].addActionListener(e -> {
-            // My Applications action
-            System.out.println("My Applications clicked");
+            viewApplications(client);
         });
         
         buttons[3].addActionListener(e -> {
-            // Make Payment action
-            System.out.println("Make Payment clicked");
+            int id = Integer.parseInt(JOptionPane.showInputDialog(null, "Enter invoice Id: (last digit of the invoice No)"));
+           Invoice invoice = invoiceDAO.getInvoice(id, client);
+            if (invoice.getPaymentStatus() != PaymentStatus.PAID) {
+                makePayment(invoice);
+            } else {
+                JOptionPane.showMessageDialog(null, "Invoice already paid!!");
+            }
+            
         });
         
         buttons[4].addActionListener(e -> {
@@ -978,8 +1005,9 @@ public class Dashboard {
         });
         
         buttons[5].addActionListener(e -> {
-            // Contact Support action
-            System.out.println("Contact Support clicked");
+            if (clientDAO.deleteClient(client.getClientId())) {
+                JOptionPane.showMessageDialog(null, "User Logged out successfully!!");
+            }
         });
 
         JPanel contentPanel = new JPanel();
@@ -1062,5 +1090,939 @@ public class Dashboard {
         dashFrame.setVisible(true);
         dashFrame.setResizable(false);
         dashFrame.setLocationRelativeTo(null);
+    }
+
+    public static void adminDashboard(Admin admin){
+        JFrame adminFrame = new JFrame();
+        adminFrame.setSize(new Dimension(750, 650));
+        adminFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        adminFrame.setLayout(new BorderLayout());
+
+        List<Image> icons = new ArrayList<>();
+        icons.add(new ImageIcon(Dashboard.class.getResource("/Resources/icon16X16.png")).getImage());
+        icons.add(new ImageIcon(Dashboard.class.getResource("/Resources/icon32X32.png")).getImage());
+        icons.add(new ImageIcon(Dashboard.class.getResource("/Resources/icon64X64.png")).getImage());
+        adminFrame.setIconImages(icons);
+
+        JPanel navPanel = navBarPanel("UZIMA BOREHOLE SYSTEM", adminFrame);
+        navPanel.setPreferredSize(new Dimension(750, 80));
+        navPanel.setMaximumSize(new Dimension(750, 80));
+
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBackground(new Color(236, 240, 241));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
+
+        JPanel welcomePanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 10, 5, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        welcomePanel.setOpaque(false);
+        welcomePanel.setPreferredSize(new Dimension(900, 50));
+        welcomePanel.setMaximumSize(new Dimension(900, 50));
+
+        JLabel welcomeLabel = new JLabel("Welcome, Admin " + admin.getUsername());
+        welcomeLabel.setFont(new Font("Cambria", Font.PLAIN, 18));
+        welcomeLabel.setForeground(new Color(44, 62, 80));
+
+        gbc.gridy = 0;
+        gbc.gridx = 0;
+        gbc.weightx = 0.1;
+        welcomePanel.add(welcomeLabel, gbc);
+
+        gbc.gridy = 0;
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        welcomePanel.add(Box.createHorizontalGlue(), gbc);
+
+        gbc.gridy = 0;
+        gbc.gridx = 2;
+        gbc.weightx = 0.1;
+
+        JLabel lastLogInLabel = new JLabel("Last Login: " + InputValidator.formatLastLoginForDisplay(admin.getLastLogin()));
+        lastLogInLabel.setFont(new Font("Cambria", Font.PLAIN, 18));
+        lastLogInLabel.setForeground(new Color(44, 62, 80));
+        welcomePanel.add(lastLogInLabel, gbc);
+
+        welcomePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainPanel.add(welcomePanel);
+        mainPanel.add(Box.createVerticalStrut(25));
+
+        JPanel cardPanel = new JPanel(new GridLayout(1, 3, 30, 0));
+        cardPanel.setOpaque(false);
+        cardPanel.setMaximumSize(new Dimension(450, 120));
+        cardPanel.setPreferredSize(new Dimension(450, 120));
+
+        int totalServices = DrillingDAO.countDrillingServices() + PlumbingDAO.countPlumbingServices() + TankDAO.countTankInstallations() + PumpDAO.countPumpInstallations();
+
+        cardPanel.add(createCardPanel("CLIENTS", Integer.toString(clientDAO.countClients()), "Total"));
+        cardPanel.add(createCardPanel("SERVICES", Integer.toString(totalServices), "This Month"));
+        cardPanel.add(createCardPanel("REVENUE", CurrencyFormatter.formatcompact(invoiceDAO.getTotalRevenue()), "This Year"));
+        cardPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainPanel.add(cardPanel);
+        mainPanel.add(Box.createVerticalStrut(25));
+
+        JPanel actionsPanel = new JPanel();
+        actionsPanel.setOpaque(false);
+        actionsPanel.setMaximumSize(new Dimension(450, 100));
+        actionsPanel.setPreferredSize(new Dimension(450, 100));
+        actionsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        String[] btnTexts = {"Register New Admin", "View Applications", "Generate Invoice", "View Reports", "Search Client"};
+        RoundedButton[] btns = new RoundedButton[btnTexts.length];
+        for (int i = 0; i < btnTexts.length; i++) {
+            btns[i] = new RoundedButton(btnTexts[i], 15);
+            btns[i].setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            btns[i].setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+            btns[i].setBackground(new Color(96, 147, 93));
+            btns[i].setForeground(Color.WHITE);
+            actionsPanel.add(btns[i]);
+        }
+        btns[0].addActionListener(e -> {});
+        mainPanel.add(actionsPanel);
+        mainPanel.add(Box.createVerticalStrut(25));
+
+        JPanel recentPanel = new JPanel(new GridBagLayout());
+        recentPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        GridBagConstraints gbcRecent = new GridBagConstraints();
+        gbcRecent.insets = new Insets(5, 10, 5, 10);
+        gbcRecent.fill = GridBagConstraints.HORIZONTAL;
+
+        // Header Row
+        gbcRecent.gridy = 0;
+        gbcRecent.gridx = 0;
+        gbcRecent.weightx = 0.1;
+        JLabel idLabel = new JLabel("ID");
+        idLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        idLabel.setForeground(new Color(44, 62, 80));
+        recentPanel.add(idLabel, gbcRecent);
+
+        gbcRecent.gridx = 1;
+        gbcRecent.weightx = 0.3;
+        JLabel clientLabel = new JLabel("Client Name");
+        clientLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        clientLabel.setForeground(new Color(44, 62, 80));
+        recentPanel.add(clientLabel, gbcRecent);
+
+        gbcRecent.gridx = 2;
+        gbcRecent.weightx = 0.3;
+        JLabel serviceLabel = new JLabel("Service Type");
+        serviceLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        serviceLabel.setForeground(new Color(44, 62, 80));
+        recentPanel.add(serviceLabel, gbcRecent);
+
+        gbcRecent.gridx = 3;
+        gbcRecent.weightx = 0.3;
+        JLabel amountLabel = new JLabel("Amount");
+        amountLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        amountLabel.setForeground(new Color(44, 62, 80));
+        recentPanel.add(amountLabel, gbcRecent);
+
+        addTransaction(recentPanel, gbcRecent);
+        mainPanel.add(recentPanel);
+
+        adminFrame.getContentPane().add(navPanel, BorderLayout.NORTH);
+        adminFrame.getContentPane().add(mainPanel, BorderLayout.CENTER);
+        adminFrame.setVisible(true);
+        adminFrame.setResizable(false);
+        adminFrame.setLocationRelativeTo(null);
+    }
+
+    private static JPanel createCardPanel(String title, String value, String subTitle){
+        JPanel card = new JPanel();
+        card.setBackground(Color.WHITE);
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(189, 195, 199), 2, true),
+            BorderFactory.createEmptyBorder(15, 10, 15, 10)
+        ));
+
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        titleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        titleLabel.setForeground(new Color(44, 62, 80));
+        card.add(titleLabel);
+        card.add(Box.createVerticalStrut(15));
+
+        JLabel total = new JLabel(value);
+        total.setAlignmentX(Component.CENTER_ALIGNMENT);
+        total.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        total.setForeground(new Color(44, 62, 80));
+        card.add(total);
+
+        JLabel subTitleLabel = new JLabel(subTitle);
+        subTitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        subTitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        subTitleLabel.setForeground(new Color(44, 62, 80));
+        card.add(subTitleLabel);
+        return card;
+    }
+
+    private static void addTransaction(JPanel panel, GridBagConstraints gbc){
+        List<Invoice> invoices = invoiceDAO.getRecentInvoices();
+        int row = 1;
+
+        for (Invoice invoice : invoices) {
+            gbc.gridy = row;
+            gbc.gridx = 0;
+            gbc.weightx = 0.1;
+            JLabel idLabel = new JLabel(Integer.toString(invoice.getInvoiceId()));
+            idLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+            idLabel.setForeground(new Color(44, 62, 80));
+            panel.add(idLabel, gbc);
+
+            gbc.gridx = 1;
+            gbc.weightx = 0.3;
+            JLabel clientLabel = new JLabel(invoice.getClient().getUsername());
+            clientLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+            clientLabel.setForeground(new Color(44, 62, 80));
+            panel.add(clientLabel, gbc);
+
+            gbc.gridx = 2;
+            gbc.weightx = 0.3;
+            JLabel serviceLabel = new JLabel(invoice.getServiceType());
+            serviceLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+            serviceLabel.setForeground(new Color(44, 62, 80));
+            panel.add(serviceLabel, gbc);
+
+            gbc.gridx = 3;
+            gbc.weightx = 0.3;
+            JLabel amountLabel = new JLabel("KES " + String.format("%.2f", invoice.getAmountPaid()));
+            amountLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+            amountLabel.setForeground(new Color(44, 62, 80));
+            panel.add(amountLabel, gbc);
+            
+            row++;
+        }
+    }
+
+    private static void viewInvoices(Client client){
+        String[] columnNames = {"Invoice NO", "Service Type", "Status", "Amount Paid", "Balance", "Invoice Date"};
+        List<Invoice> invoices = invoiceDAO.getInvoiceByClient(client.getClientId());
+
+        JFrame frame = new JFrame();
+        frame.setSize(new Dimension(1050, 700));
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new BorderLayout());
+
+        JPanel navPanel = navBarPanel("MY INVOICES", frame);
+
+        JPanel mainPanel = new JPanel();
+        mainPanel.setBackground(new Color(245, 247, 250));
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(25, 40, 25, 40));
+
+        JScrollPane scrollPane = new JScrollPane(mainPanel);
+        scrollPane.setBorder(null);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.getViewport().setBackground(new Color(245, 247, 250));
+
+        JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        labelPanel.setOpaque(false);
+        labelPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        labelPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+
+
+        JLabel invoiceIcon = new JLabel("\uf543");
+        invoiceIcon.setFont(fontAwesome.deriveFont(Font.BOLD, 28f));
+        invoiceIcon.setForeground(new Color(96, 147, 93));
+        labelPanel.add(invoiceIcon);
+
+        JLabel title = new JLabel(client.getUsername() + "'s Invoices");
+        title.setFont(new Font("Cambria", Font.BOLD, 24));
+        title.setForeground(new Color(44, 62, 80));
+        labelPanel.add(title);
+
+        mainPanel.add(labelPanel);
+        mainPanel.add(Box.createVerticalStrut(20));
+
+        if (invoices.size() != 0) {
+            JPanel tableContainer = new JPanel(new BorderLayout());
+            tableContainer.setBackground(Color.WHITE);
+            tableContainer.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 225, 230), 1),
+                BorderFactory.createEmptyBorder(0,0,0,0)
+            ));
+            tableContainer.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            JPanel invoicesPanel = new JPanel(new GridBagLayout());
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(12, 15, 12, 15);
+            gbc.anchor = GridBagConstraints.WEST;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            invoicesPanel.setBackground(Color.white);
+
+            JPanel headerRow = new JPanel(new GridBagLayout());
+            headerRow.setBackground(new Color(52, 73, 94));
+            GridBagConstraints headerGbc = new GridBagConstraints();
+            headerGbc.insets = new Insets(15, 15, 15, 15);
+            headerGbc.anchor = GridBagConstraints.WEST;
+            headerGbc.fill = GridBagConstraints.HORIZONTAL;
+            headerGbc.gridy = 0;
+
+            int column = 0;
+            double[] columnWeights = {0.15, 0.20, 0.18, 0.15, 0.17, 0.15};
+
+            for (String header : columnNames) {
+                headerGbc.gridx = column;
+                headerGbc.weightx = columnWeights[column];
+
+                JLabel headerLabel = new JLabel(header);
+                headerLabel.setFont(new Font("Segoe UI", Font.BOLD, 15));
+                headerLabel.setForeground(Color.WHITE);
+                headerRow.add(headerLabel, headerGbc);
+
+                column++;
+            }
+
+            tableContainer.add(headerRow, BorderLayout.NORTH);
+
+            int row = 0;
+            for (Invoice invoice : invoices) {
+                Color rowColor = (row % 2 == 0) ? Color.WHITE : new Color(249, 250, 251);
+
+                gbc.gridy = row;
+                gbc.gridx = 0;
+                gbc.weightx = columnWeights[0];
+
+                JLabel invoiceNumber = new JLabel(invoice.getInvoiceNumber());
+                invoiceNumber.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                invoiceNumber.setForeground(new Color(41, 128, 185));
+                invoiceNumber.setOpaque(true);
+                invoiceNumber.setBackground(rowColor);
+                invoicesPanel.add(invoiceNumber, gbc);
+
+                gbc.gridx = 1;
+                gbc.weightx = columnWeights[1];
+                JLabel serviceType = new JLabel(invoice.getServiceType());
+                serviceType.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                serviceType.setForeground(new Color(52, 73, 94));
+                serviceType.setOpaque(true);
+                serviceType.setBackground(rowColor);
+                invoicesPanel.add(serviceType, gbc);
+
+                gbc.gridx = 2;
+                gbc.weightx = columnWeights[5];
+                JLabel statusLabel = new JLabel(invoice.getPaymentStatus().getDisplayName());
+                statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                statusLabel.setForeground(new Color(52, 73, 94));
+                statusLabel.setOpaque(true);
+                statusLabel.setBackground(rowColor);
+                invoicesPanel.add(statusLabel, gbc);
+
+                gbc.gridx = 3;
+                gbc.weightx = columnWeights[4];
+                JLabel amountPaid = new JLabel(Double.toString(invoice.getAmountPaid()));
+                amountPaid.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                amountPaid.setForeground(new Color(39, 174, 96));
+                amountPaid.setOpaque(true);
+                amountPaid.setBackground(rowColor);
+                invoicesPanel.add(amountPaid, gbc);
+
+                gbc.gridx = 4;
+                gbc.weightx = columnWeights[2];
+                JLabel balance = new JLabel(Double.toString(invoice.getOutstandingAmount()));
+                balance.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                balance.setForeground(new Color(39, 174, 96));
+                balance.setOpaque(true);
+                balance.setBackground(rowColor);
+                invoicesPanel.add(balance, gbc);
+
+                gbc.gridx = 5;
+                gbc.weightx = columnWeights[3];
+                JLabel invoiceDate = new JLabel(invoice.getInvoiceDate().toString());
+                invoiceDate.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                invoiceDate.setForeground(new Color(127, 140, 141));
+                invoiceDate.setOpaque(true);
+                invoiceDate.setBackground(rowColor);
+                invoicesPanel.add(invoiceDate, gbc);
+
+                row++;
+            }
+
+            tableContainer.add(invoicesPanel, BorderLayout.CENTER);
+            mainPanel.add(tableContainer);
+            mainPanel.add(Box.createVerticalStrut(15));
+        } else {
+            JPanel emptyStatePanel = new JPanel();
+            emptyStatePanel.setLayout(new BoxLayout(emptyStatePanel, BoxLayout.Y_AXIS));
+            emptyStatePanel.setBackground(Color.WHITE);
+            emptyStatePanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 225, 230), 1),
+                BorderFactory.createEmptyBorder(80, 40, 80, 40)
+            ));
+            emptyStatePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    
+            JLabel emptyIcon = new JLabel("\uf570");
+            emptyIcon.setFont(fontAwesome.deriveFont(Font.PLAIN, 60f));
+            emptyIcon.setForeground(new Color(189, 195, 199));
+            emptyIcon.setAlignmentX(Component.CENTER_ALIGNMENT);
+            emptyStatePanel.add(emptyIcon);
+            
+            emptyStatePanel.add(Box.createVerticalStrut(20));
+            
+            JLabel noInvoices = new JLabel("NO AVAILABLE APPLICATIONS");
+            noInvoices.setFont(new Font("Segoe UI Emoji", Font.BOLD, 20));
+            noInvoices.setAlignmentX(Component.CENTER_ALIGNMENT);
+            noInvoices.setForeground(new Color(149, 165, 166));
+            emptyStatePanel.add(noInvoices);
+            
+            emptyStatePanel.add(Box.createVerticalStrut(10));
+            
+            JLabel subText = new JLabel("You haven't submitted any applications yet");
+            subText.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            subText.setAlignmentX(Component.CENTER_ALIGNMENT);
+            subText.setForeground(new Color(189, 195, 199));
+            emptyStatePanel.add(subText);
+            
+            mainPanel.add(emptyStatePanel);
+        }
+        
+        frame.getContentPane().add(navPanel, BorderLayout.NORTH);
+        frame.getContentPane().add(scrollPane, BorderLayout.CENTER);
+        frame.setVisible(true);
+        frame.setLocationRelativeTo(null);
+        frame.setResizable(false);
+    }
+
+    private static void viewApplications(Client client){
+        String[] headers = {"ID", "Name", "Type", "Date", "Amount", "Status"};
+        List<Application> applications = ApplicationDAO.getApplicationBy(client);
+
+        JFrame frame = new JFrame("UZIMA BORA BOREHOLE SERVICES");
+        frame.setSize(new Dimension(1050, 700));
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new BorderLayout());
+
+        JPanel navPanel = navBarPanel("MY INVOICES", frame);
+
+        JPanel mainPanel = new JPanel();
+        mainPanel.setBackground(new Color(245, 247, 250));
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(25, 40, 25, 40));
+
+        JScrollPane scrollPane = new JScrollPane(mainPanel);
+        scrollPane.setBorder(null);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.getViewport().setBackground(new Color(245, 247, 250));
+
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        headerPanel.setOpaque(false);
+        headerPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        headerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+
+        JLabel invoiceIcon = new JLabel("\uf570");
+        invoiceIcon.setFont(fontAwesome.deriveFont(Font.BOLD, 28f));
+        invoiceIcon.setForeground(new Color(96, 147, 93));
+        headerPanel.add(invoiceIcon);
+
+        JLabel title = new JLabel(client.getUsername() + "'s Applications");
+        title.setFont(new Font("Cambria", Font.BOLD, 24));
+        title.setForeground(new Color(44, 62, 80));
+        headerPanel.add(title);
+
+        mainPanel.add(headerPanel);
+        mainPanel.add(Box.createVerticalStrut(20));
+
+        if (applications.size() != 0) {
+            JPanel tableContainer = new JPanel(new BorderLayout());
+            tableContainer.setBackground(Color.WHITE);
+            tableContainer.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 225, 230), 1),
+                BorderFactory.createEmptyBorder(0,0,0,0)
+            ));
+            tableContainer.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            JPanel appsPanel = new JPanel(new GridBagLayout());
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(12, 15, 12, 15);
+            gbc.anchor = GridBagConstraints.WEST;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            appsPanel.setBackground(Color.white);
+
+            JPanel headerRow = new JPanel(new GridBagLayout());
+            headerRow.setBackground(new Color(52, 73, 94));
+            GridBagConstraints headerGbc = new GridBagConstraints();
+            headerGbc.insets = new Insets(15, 15, 15, 15);
+            headerGbc.anchor = GridBagConstraints.WEST;
+            headerGbc.fill = GridBagConstraints.HORIZONTAL;
+            headerGbc.gridy = 0;
+
+            int column = 0;
+            double[] columnWeights = {0.15, 0.20, 0.18, 0.15, 0.17, 0.15};
+
+            for (String header : headers) {
+                headerGbc.gridx = column;
+                headerGbc.weightx = columnWeights[column];
+
+                JLabel headerLabel = new JLabel(header);
+                headerLabel.setFont(new Font("Segoe UI", Font.BOLD, 15));
+                headerLabel.setForeground(Color.WHITE);
+                headerRow.add(headerLabel, headerGbc);
+
+                column++;
+            }
+
+            tableContainer.add(headerRow, BorderLayout.NORTH);
+
+            int row = 0;
+            for (Application application : applications) {
+                Color rowColor = (row % 2 == 0) ? Color.WHITE : new Color(249, 250, 251);
+
+                gbc.gridy = row;
+                gbc.gridx = 0;
+                gbc.weightx = columnWeights[0];
+
+                JLabel appNumber = new JLabel(application.getApplicationNumber());
+                appNumber.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                appNumber.setForeground(new Color(41, 128, 185));
+                appNumber.setOpaque(true);
+                appNumber.setBackground(rowColor);
+                appsPanel.add(appNumber, gbc);
+
+                gbc.gridx = 1;
+                gbc.weightx = columnWeights[1];
+                JLabel clientName = new JLabel(client.getUsername());
+                clientName.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                clientName.setForeground(new Color(52, 73, 94));
+                clientName.setOpaque(true);
+                clientName.setBackground(rowColor);
+                appsPanel.add(clientName, gbc);
+
+                gbc.gridx = 2;
+                gbc.weightx = columnWeights[2];
+                JLabel typeLabel = new JLabel(getApplicationType(application));
+                typeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                typeLabel.setForeground(new Color(52, 73, 94));
+                typeLabel.setOpaque(true);
+                typeLabel.setBackground(rowColor);
+                appsPanel.add(typeLabel, gbc);
+
+                gbc.gridx = 3;
+                gbc.weightx = columnWeights[3];
+                JLabel submittedDate = new JLabel(application.getSubmittedDate().toString());
+                submittedDate.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                submittedDate.setForeground(new Color(127, 140, 141));
+                submittedDate.setOpaque(true);
+                submittedDate.setBackground(rowColor);
+                appsPanel.add(submittedDate, gbc);
+
+                gbc.gridx = 4;
+                gbc.weightx = columnWeights[4];
+                JLabel amount = new JLabel(CurrencyFormatter.formatcompact(application.getEstimatedCost()));
+                amount.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                amount.setForeground(new Color(39, 174, 96));
+                amount.setOpaque(true);
+                amount.setBackground(rowColor);
+                appsPanel.add(amount, gbc);
+
+                gbc.gridx = 5;
+                gbc.weightx = columnWeights[5];
+                JPanel statusLabel = createStatusBadge(application, rowColor);
+                appsPanel.add(statusLabel, gbc);
+
+                row++;
+            }
+
+            tableContainer.add(appsPanel, BorderLayout.CENTER);
+            mainPanel.add(tableContainer);
+            mainPanel.add(Box.createVerticalStrut(15));
+
+            JPanel legendPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
+            legendPanel.setBackground(Color.WHITE);
+            legendPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 225, 230), 1),
+                BorderFactory.createEmptyBorder(12, 15, 12, 15)
+            ));
+            legendPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            legendPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+            
+            JLabel legendTitle = new JLabel("Legend:");
+            legendTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            legendTitle.setForeground(new Color(52, 73, 94));
+            legendPanel.add(legendTitle);
+
+            addLegendBadge(legendPanel, "Pending", new Color(255, 243, 205), new Color(197, 138, 0));
+            addLegendBadge(legendPanel, "Approved", new Color(212, 237, 218), new Color(39, 174, 96));
+            addLegendBadge(legendPanel, "Rejected", new Color(248, 215, 218), new Color(220, 53, 69));
+            addLegendBadge(legendPanel, "In Progress", new Color(209, 236, 241), new Color(23, 162, 184));
+            
+            mainPanel.add(legendPanel);
+
+        } else {
+            JPanel emptyStatePanel = new JPanel();
+            emptyStatePanel.setLayout(new BoxLayout(emptyStatePanel, BoxLayout.Y_AXIS));
+            emptyStatePanel.setBackground(Color.WHITE);
+            emptyStatePanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 225, 230), 1),
+                BorderFactory.createEmptyBorder(80, 40, 80, 40)
+            ));
+            emptyStatePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    
+            JLabel emptyIcon = new JLabel("\uf570");
+            emptyIcon.setFont(fontAwesome.deriveFont(Font.PLAIN, 60f));
+            emptyIcon.setForeground(new Color(189, 195, 199));
+            emptyIcon.setAlignmentX(Component.CENTER_ALIGNMENT);
+            emptyStatePanel.add(emptyIcon);
+            
+            emptyStatePanel.add(Box.createVerticalStrut(20));
+            
+            JLabel noInvoices = new JLabel("NO AVAILABLE APPLICATIONS");
+            noInvoices.setFont(new Font("Segoe UI Emoji", Font.BOLD, 20));
+            noInvoices.setAlignmentX(Component.CENTER_ALIGNMENT);
+            noInvoices.setForeground(new Color(149, 165, 166));
+            emptyStatePanel.add(noInvoices);
+            
+            emptyStatePanel.add(Box.createVerticalStrut(10));
+            
+            JLabel subText = new JLabel("You haven't submitted any applications yet");
+            subText.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            subText.setAlignmentX(Component.CENTER_ALIGNMENT);
+            subText.setForeground(new Color(189, 195, 199));
+            emptyStatePanel.add(subText);
+            
+            mainPanel.add(emptyStatePanel);
+        }
+
+        frame.getContentPane().add(navPanel, BorderLayout.NORTH);
+        frame.getContentPane().add(scrollPane, BorderLayout.CENTER); 
+        frame.setVisible(true);
+        frame.setResizable(false);
+        frame.setLocationRelativeTo(null);
+    }
+
+    private static String getStatusEmoji(Application app){
+        String emoji = "";
+
+        if (app.getStatus() == Status.APPROVED) {
+            emoji = "🟢";
+        } else if (app.getStatus() == Status.IN_PROGRESS){
+            emoji = "🔵";
+        } else if (app.getStatus() == Status.REJECTED) {
+            emoji = "🔴";
+        } else if (app.getStatus() == Status.PENDING) {
+            emoji = "🟡";
+        }
+
+        return emoji;
+    }
+
+    private static String getApplicationType(Application app) {
+        List<String> services = new ArrayList<>();
+        
+        if (app.isNeedsDrilling()) {
+            services.add("Drilling");
+        }
+        if (app.isNeedsPump()) {
+            services.add("Pump");
+        }
+        if (app.isNeedsTank()) {
+            services.add("Tank");
+        }
+        if (app.isNeedsPlumbing()) {
+            services.add("Plumbing");
+        }
+        
+        if (services.size() == 4) {
+            return "Full Service";
+        }
+        
+        if (services.isEmpty()) {
+            return "None";
+        }
+        
+        return String.join(" + ", services);
+    }
+
+    private static void makePayment(Invoice invoice){
+        JFrame paymentFrame = new JFrame("UZIMA BORA BOREHOLE SERVICES");
+        paymentFrame.setSize(new Dimension(500, 600));
+        paymentFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        JPanel mainPanel = new JPanel();
+        mainPanel.setBackground(Color.WHITE);
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+        mainPanel.setPreferredSize(new Dimension(500, 750));
+        mainPanel.setMaximumSize(new Dimension(500, Integer.MAX_VALUE));
+
+        JScrollPane scrollPane = new JScrollPane(mainPanel);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.setBorder(null);
+
+        JLabel header = new JLabel("Make Payment");
+        header.setFont(new Font("Cambria", Font.BOLD, 24));
+        header.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainPanel.add(header);
+        mainPanel.add(Box.createVerticalStrut(25));
+
+        JPanel invoicePanel = new JPanel();
+        invoicePanel.setBackground(new Color(245, 247, 250));
+        invoicePanel.setLayout(new BoxLayout(invoicePanel, BoxLayout.Y_AXIS));
+        invoicePanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(220, 225, 230), 1),
+            BorderFactory.createEmptyBorder(15, 20, 15, 20)
+        ));
+        invoicePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        invoicePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 120));
+
+        JLabel invoiceId = new JLabel("Invoice: " + invoice.getInvoiceNumber());
+        invoiceId.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        invoicePanel.add(invoiceId);
+        invoicePanel.add(Box.createVerticalStrut(8));
+
+        JLabel clientName = new JLabel("Client: " + invoice.getClient().getUsername());
+        clientName.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        invoicePanel.add(clientName);
+        invoicePanel.add(Box.createVerticalStrut(8));
+
+        JLabel category = new JLabel("Category: " + invoice.getClient().getClientCategory().name());
+        category.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        invoicePanel.add(category);
+
+        mainPanel.add(invoicePanel);
+        mainPanel.add(Box.createVerticalStrut(20));
+
+        JPanel amountPanel = new JPanel();
+        amountPanel.setLayout(new BoxLayout(amountPanel, BoxLayout.Y_AXIS));
+        amountPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        amountPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
+        amountPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        amountPanel.setOpaque(false);
+
+
+        JPanel grandTotalRow = createAmountRow("Grand Total: ", CurrencyFormatter.formatcompact(invoice.getGrandTotal()), false);
+        amountPanel.add(grandTotalRow);
+        amountPanel.add(Box.createVerticalStrut(10));
+
+        JPanel amountPaidRow = createAmountRow("Amount Paid: ", CurrencyFormatter.formatcompact(invoice.getAmountPaid()), false);
+        amountPanel.add(amountPaidRow);
+        amountPanel.add(Box.createVerticalStrut(10));
+
+        JPanel outstandingRow = createAmountRow("Outstanding: ", CurrencyFormatter.formatcompact(invoice.getOutstandingAmount()), true);
+        amountPanel.add(outstandingRow);
+
+        mainPanel.add(amountPanel);
+        mainPanel.add(Box.createVerticalStrut(25));
+
+        JPanel paymentInputPanel = new JPanel();
+        paymentInputPanel.setLayout(new BoxLayout(paymentInputPanel, BoxLayout.Y_AXIS));
+        paymentInputPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        paymentInputPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
+        paymentInputPanel.setOpaque(false);
+
+        JLabel paymentLabel = new JLabel("Payment Amount: *");
+        paymentLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        paymentLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        paymentInputPanel.add(paymentLabel);
+        paymentInputPanel.add(Box.createVerticalStrut(8));
+
+        JTextField amountPaid = new JTextField();
+        amountPaid.setPreferredSize(new Dimension(Integer.MAX_VALUE, 40));
+        amountPaid.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        amountPaid.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        amountPaid.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
+            BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        ));
+        paymentInputPanel.add(amountPaid);
+
+        mainPanel.add(paymentInputPanel);
+        mainPanel.add(Box.createVerticalStrut(20));
+
+        JPanel methodPanel = new JPanel();
+        methodPanel.setLayout(new BoxLayout(methodPanel, BoxLayout.Y_AXIS));
+        methodPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        methodPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
+        methodPanel.setOpaque(false);
+
+        JLabel methodLabel = new JLabel("Payment Method: *");
+        methodLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        methodLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        methodPanel.add(methodLabel);
+        methodPanel.add(Box.createVerticalStrut(8));
+
+        String[] methods = {"M-Pesa", "Cash", "Card"};
+        JComboBox<String> comboBox = new JComboBox<>(methods);
+        comboBox.setPreferredSize(new Dimension(Integer.MAX_VALUE, 40));
+        comboBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        comboBox.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        methodPanel.add(comboBox);
+
+        mainPanel.add(methodPanel);
+        mainPanel.add(Box.createVerticalStrut(20));
+
+        JPanel referencePanel = new JPanel();
+        referencePanel.setLayout(new BoxLayout(referencePanel, BoxLayout.Y_AXIS));
+        referencePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        referencePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
+        referencePanel.setOpaque(false);
+
+        JLabel referenceLabel = new JLabel("Reference Number (Optional):");
+        referenceLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        referenceLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        referencePanel.add(referenceLabel);
+        referencePanel.add(Box.createVerticalStrut(8));
+        
+
+        JTextField reference = new JTextField(10);
+        reference.setPreferredSize(new Dimension(Integer.MAX_VALUE, 40));
+        reference.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        reference.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        reference.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
+            BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        ));
+        referencePanel.add(reference);
+
+        mainPanel.add(referencePanel);
+        mainPanel.add(Box.createVerticalStrut(15));
+
+        JLabel paymentDate = new JLabel("Payment Date: " + LocalDate.now());
+        paymentDate.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        paymentDate.setForeground(new Color(100, 100, 100));
+        paymentDate.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainPanel.add(paymentDate);
+        mainPanel.add(Box.createVerticalStrut(25));
+
+        JPanel btnsPanel = new JPanel(new FlowLayout(
+            FlowLayout.CENTER, 15, 0
+        ));
+        btnsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnsPanel.setOpaque(false);
+        btnsPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+
+        RoundedButton cancelBtn = new RoundedButton("Cancel", 15);
+        cancelBtn.setPreferredSize(new Dimension(120, 40));
+        cancelBtn.setBackground(new Color(17, 53, 55));
+        cancelBtn.setForeground(Color.white);
+        cancelBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        cancelBtn.addActionListener(e -> {
+            paymentFrame.dispose();
+        });
+        btnsPanel.add(cancelBtn);
+
+        RoundedButton recordBtn = new RoundedButton("Record Payment", 15);
+        recordBtn.setBackground(new Color(17, 53, 55));
+        recordBtn.setForeground(Color.white);
+        recordBtn.setPreferredSize(new Dimension(150, 40));
+        recordBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        recordBtn.addActionListener(e -> {
+            Double amount_paid = Double.parseDouble(amountPaid.getText());
+            if (PaymentValidator.inputValidation(amount_paid, invoice.getOutstandingAmount())) {
+                PaymentValidator.recordPayment(amount_paid, invoice);
+                paymentFrame.dispose();
+            }
+        });
+        btnsPanel.add(recordBtn);
+
+        mainPanel.add(btnsPanel);
+
+        paymentFrame.getContentPane().add(scrollPane);
+        paymentFrame.setVisible(true);
+        paymentFrame.setLocationRelativeTo(null);
+        paymentFrame.setResizable(false);
+    }
+
+    private static JPanel createAmountRow(String label, String amount, boolean highlight){
+        JPanel row = new JPanel(new BorderLayout(20, 0));
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+
+        if (highlight) {
+            row.setBackground(new Color(255, 248, 220));
+            row.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(255, 193, 7), 1),
+                BorderFactory.createEmptyBorder(8, 15, 8, 15)
+            ));
+        } else {
+            row.setOpaque(false);
+        }
+
+        JLabel labelComponent = new JLabel(label);
+        labelComponent.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+
+        JLabel amountComponent = new JLabel(amount);
+        amountComponent.setFont(new Font("Segoe UI", Font.BOLD, 16));
+
+        if (highlight) {
+            amountComponent.setForeground(new Color(230, 120, 0));
+        }
+        
+        row.add(labelComponent, BorderLayout.WEST);
+        row.add(amountComponent, BorderLayout.EAST);
+        return row;
+    }
+
+    private static JPanel createStatusBadge(Application app, Color backgroundColor){
+        JPanel badgePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        badgePanel.setOpaque(true);
+        badgePanel.setBackground(backgroundColor);
+
+        String status = getStatusText(app);
+        Color badgeColor;
+        Color textColor;
+
+        switch (status) {
+            case "Pending":
+                badgeColor = new Color(255, 243, 205);
+                textColor = new Color(197, 138, 0);
+                break;
+            case "Approved":
+                badgeColor = new Color(212, 237, 218);
+                textColor = new Color(39, 174, 96);
+                break;
+            case "Rejected":
+                badgeColor = new Color(248, 215, 218);
+                textColor = new Color(220, 53, 69);
+                break;
+            case "In Progress":
+                badgeColor = new Color(209, 236, 241);
+                textColor = new Color(23, 162, 184);
+                break;
+            default:
+                badgeColor = new Color(233, 236, 239);
+                textColor = new Color(73, 80, 87);
+        }
+
+        JLabel badge = new JLabel(status);
+        badge.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        badge.setForeground(textColor);
+        badge.setOpaque(true);
+        badge.setBackground(badgeColor);
+        badge.setBorder(BorderFactory.createEmptyBorder(4, 12, 4, 12));
+
+        badgePanel.add(badge);
+        return badgePanel;
+    }
+
+    private static String getStatusText(Application application){
+        String emojiStatus = getStatusEmoji(application);
+        if (emojiStatus.contains("🟡")) return "Pending";
+        if (emojiStatus.contains("🟢")) return "Approved";
+        if (emojiStatus.contains("🔴")) return "Rejected";
+        if (emojiStatus.contains("🔵")) return "In Progress";
+        return "Unknown";
+    }
+
+    private static void addLegendBadge(JPanel panel, String text, Color bgColor, Color fgColor){
+        JLabel badge = new JLabel(text);
+        badge.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        badge.setForeground(fgColor);
+        badge.setOpaque(true);
+        badge.setBackground(bgColor);
+        badge.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createEmptyBorder(0, 10, 0, 0),
+            BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(fgColor.brighter(), 1),
+                BorderFactory.createEmptyBorder(3, 10, 3, 10)
+            )
+        ));
+        panel.add(badge);
     }
 }

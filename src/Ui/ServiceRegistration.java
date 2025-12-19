@@ -18,7 +18,7 @@ public class ServiceRegistration {
     private static String pumpSelection = "0.0";
     private static Application app;
 
-    ServiceRegistration(Client client){
+    public ServiceRegistration(Client client){
         this.client = client;
         app = new Application(client);
     }
@@ -444,10 +444,10 @@ public class ServiceRegistration {
         calculateBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         calculateBtn.setFont(new Font("Calibri", Font.BOLD, 14));
         calculateBtn.addActionListener(e -> {
-            DrillingService drillingService = appliedDrilling(boreholeCheckBox, client, boreholeSelectionPanel, depth);
-            PumpInstallation pumpInstallation = appliedpPumpInstallation(pumpCheckBox, client, tankDetails, depth2, height);
-            TankInstallation tankInstallation = appliedTankInstallation(tankCheckBox, client, capacity);
-            PlumbingService plumbingService = appliedPlumbing(plumbingCheckBox, client, plumbingDetails, diameter, type, length, outlets);
+            appliedDrilling(boreholeCheckBox, client, boreholeSelectionPanel, depth);
+            appliedpPumpInstallation(pumpCheckBox, client, tankDetails, depth2, height);
+            appliedTankInstallation(tankCheckBox, client, capacity);
+            appliedPlumbing(plumbingCheckBox, client, plumbingDetails, diameter, type, length, outlets);
             quoteGenerator(client, app);
         });
         btnsPanel.add(calculateBtn);
@@ -485,7 +485,10 @@ public class ServiceRegistration {
             app.setEstimatedCost();
             app.setAdditionalNotes(additionalNotes.getText());
             app.setSubmittedDate(Timestamp.valueOf(LocalDateTime.now()));
-            ApplicationDAO.insertApplication(app);
+            boolean status = ApplicationDAO.insertApplication(app);
+            if (status) {
+                confirmationFrame(app);
+            }
         });
 
         mainPanel.add(formPanel);
@@ -1164,5 +1167,208 @@ public class ServiceRegistration {
         quoteFrame.getContentPane().add(scrollBar, BorderLayout.CENTER);
         quoteFrame.setVisible(true);
         quoteFrame.setLocationRelativeTo(null);
+    }
+
+    private void confirmationFrame(Application app){
+        JFrame frame = new JFrame();
+        frame.setLayout(new BorderLayout());
+        frame.setSize(new Dimension(950, 600));
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        List<Image> icons = new ArrayList<>();
+        icons.add(new ImageIcon(Dashboard.class.getResource("/Resources/icon16X16.png")).getImage());
+        icons.add(new ImageIcon(Dashboard.class.getResource("/Resources/icon32X32.png")).getImage());
+        icons.add(new ImageIcon(Dashboard.class.getResource("/Resources/icon64X64.png")).getImage());
+
+        frame.setIconImages(icons);
+
+        JPanel navBar = Dashboard.navBarPanel("APPLICATION SUBMITTED SUCCESSFULLY", frame);
+
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
+        mainPanel.setBackground(new Color(236, 240, 241));
+
+        JScrollPane scrollPane = new JScrollPane(mainPanel);
+        scrollPane.setBorder(null);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+        JPanel successPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        successPanel.setOpaque(false);
+        successPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel successIcon = new JLabel("\uf274");
+        successIcon.setFont(Dashboard.getFontAwesome().deriveFont(Font.BOLD, 30f));
+        successIcon.setForeground(new Color(96, 147, 93));
+        successPanel.add(successIcon);
+
+        JLabel successLabel = new JLabel("SUCCESS!");
+        successLabel.setFont(new Font("Cambria", Font.BOLD, 20));
+        successLabel.setForeground(new Color(44, 62, 80));
+        successPanel.add(successLabel);
+        mainPanel.add(successPanel);
+        mainPanel.add(Box.createVerticalStrut(15));
+
+        JLabel subTitleLabel = new JLabel("Your application has been submitted");
+        subTitleLabel.setFont(new Font("Calibri", Font.PLAIN, 18));
+        subTitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainPanel.add(subTitleLabel);
+        mainPanel.add(Box.createVerticalStrut(25));
+
+        JPanel detailsPanel = new JPanel();
+        detailsPanel.setBackground(Color.WHITE);
+        detailsPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(189, 195, 199), 2, true),
+            BorderFactory.createEmptyBorder(30, 20, 30, 20)
+        ));
+        detailsPanel.setLayout(new GridBagLayout());
+        detailsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 0, 5, 0);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel appIDLabel = new JLabel("Application ID:");
+        appIDLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        appIDLabel.setForeground(new Color(44, 62, 80));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        detailsPanel.add(appIDLabel, gbc);
+
+        JLabel appID = new JLabel(app.getApplicationNumber());
+        appID.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        appID.setForeground(new Color(52, 73, 94));
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        detailsPanel.add(appID, gbc);
+
+        JLabel clientNameLabel = new JLabel("Client Name:");
+        clientNameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        clientNameLabel.setForeground(new Color(44, 62, 80));
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        detailsPanel.add(clientNameLabel, gbc);
+
+        JLabel clientName = new JLabel(app.getClient().getUsername());
+        clientName.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        clientName.setForeground(new Color(52, 73, 94));
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        detailsPanel.add(clientName, gbc);
+
+        JLabel dateSubmittedLabel = new JLabel("Date Submitted:");
+        dateSubmittedLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        dateSubmittedLabel.setForeground(new Color(44, 62, 80));
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.weightx = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        detailsPanel.add(dateSubmittedLabel, gbc);
+
+        JLabel dateSubmitted = new JLabel(app.getSubmittedDate().toLocalDateTime().toLocalDate().toString());
+        dateSubmitted.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        dateSubmitted.setForeground(new Color(52, 73, 94));
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        detailsPanel.add(dateSubmitted, gbc);
+
+        JLabel statusLabel = new JLabel("Status:");
+        statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        statusLabel.setForeground(new Color(44, 62, 80));
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.weightx = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        detailsPanel.add(statusLabel, gbc);
+
+        JLabel status = new JLabel(app.getStatus() + " REVIEW");
+        status.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        status.setForeground(new Color(96, 147, 93));
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        detailsPanel.add(status, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        detailsPanel.add(Box.createVerticalStrut(15), gbc);
+
+        JLabel estimatedCostLabel = new JLabel("ESTIMATED COST:");
+        estimatedCostLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        estimatedCostLabel.setForeground(new Color(44, 62, 80));
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.gridwidth = 1;
+        gbc.weightx = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        detailsPanel.add(estimatedCostLabel, gbc);
+
+        JLabel estimatedCost = new JLabel("KES " + String.format("%.2f", app.getEstimatedCost()));
+        estimatedCost.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        estimatedCost.setForeground(new Color(52, 152, 219));
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        detailsPanel.add(estimatedCost, gbc);
+        mainPanel.add(detailsPanel);
+        mainPanel.add(Box.createVerticalStrut(25));
+
+        JPanel instructionsPanel = new JPanel();
+        instructionsPanel.setBackground(Color.WHITE);
+        instructionsPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(189, 195, 199), 2, true),
+            BorderFactory.createEmptyBorder(25, 20, 25, 20)
+        ));
+        instructionsPanel.setLayout(new BoxLayout(instructionsPanel, BoxLayout.Y_AXIS));
+        instructionsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        instructionsPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 220));
+        instructionsPanel.setPreferredSize(new Dimension(800, 220));
+
+        JLabel instructionLabel = new JLabel("What happens next?");
+        instructionLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        instructionLabel.setForeground(new Color(44, 62, 80));
+        instructionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        instructionsPanel.add(instructionLabel);
+        instructionsPanel.add(Box.createVerticalStrut(12));
+
+        String[] instructions = {"Our team will review your application within 24 hours", "A site survey will be scheduled", "You will receive a formal quotation", "Upon approval, work will commence"};
+        for (int i = 0; i < instructions.length; i++) {
+            JLabel instruction = new JLabel((i+1) + ". " + instructions[i]);
+            instruction.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+            instruction.setForeground(new Color(52, 73, 94));
+            instruction.setAlignmentX(Component.LEFT_ALIGNMENT);
+            instructionsPanel.add(instruction);
+            if (i < instructions.length - 1) {
+                instructionsPanel.add(Box.createVerticalStrut(8));
+            }
+        }
+        mainPanel.add(instructionsPanel);
+        mainPanel.add(Box.createVerticalStrut(25));
+
+        RoundedButton anotherBtn = new RoundedButton("Submit Another", 15);
+        anotherBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        anotherBtn.setBackground(new Color(96, 147, 93));
+        anotherBtn.setForeground(Color.WHITE);
+        anotherBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        anotherBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        anotherBtn.addActionListener(e -> applicationForm());
+        mainPanel.add(anotherBtn);
+        
+        JPanel footer = Dashboard.footerPanel();
+
+        frame.getContentPane().add(navBar, BorderLayout.NORTH);
+        frame.getContentPane().add(scrollPane, BorderLayout.CENTER);
+        frame.getContentPane().add(footer, BorderLayout.SOUTH);
+        frame.setVisible(true);
+        frame.setLocationRelativeTo(null);
     }
 }

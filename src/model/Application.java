@@ -162,6 +162,9 @@ public class Application {
     public void setAdditionalNotes(String additionalNotes) { this.additionalNotes = additionalNotes; }
     
     public double getEstimatedCost() { return estimatedCost; }
+    public void setTotal(double total){
+        this.estimatedCost = total;
+    }
     public void setEstimatedCost() { this.estimatedCost = calculateEstimatedCost(); }
 
     public int getReviewedBy() { return reviewedBy; }

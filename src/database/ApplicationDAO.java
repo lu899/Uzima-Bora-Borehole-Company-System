@@ -2,16 +2,18 @@ package database;
 
 import java.sql.*;
 import javax.swing.*;
+import java.util.*;
 
 import model.*;
 
 public class ApplicationDAO {
     private static Connection con = DatabaseManager.getConnection();
 
-    public static void insertApplication(Application app){
+    public static boolean insertApplication(Application app){
         String insertSQL = """
                 INSERT INTO applications(application_no, client_id, full_name, address, telephone, email, client_category, borehole_location, needs_drilling, drilling_type, estimated_depth, needs_pump, pump_type, tank_height, needs_tank, tank_capacity, needs_plumbing, pipe_type, pipe_diameter, pipe_length, number_of_outlets, additional_notes, estimated_cost, status, submitted_date) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 """;
+        boolean successfull = false;
         
         try (PreparedStatement pst = con.prepareStatement(insertSQL, Statement.RETURN_GENERATED_KEYS)) {
             pst.setString(1, app.getApplicationNumber());
@@ -71,11 +73,39 @@ public class ApplicationDAO {
                 if (rs.next()) {
                     int applicationId = rs.getInt(1);
                     app.setApplicationId(applicationId);
-                    JOptionPane.showMessageDialog(null, "Application Created: " + app.getApplicationNumber());
+                    successfull = true;
                 }
             }
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null, "Couldn't insert application: " + e.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
         }
+        return successfull;
+    }
+
+    public static List<Application> getApplicationBy(Client client){
+        List<Application> applications = new ArrayList<>();
+        String selectSQL = "SELECT * FROM applications WHERE client_id = ?";
+
+        try (PreparedStatement pst = con.prepareStatement(selectSQL)) {
+            pst.setInt(1, client.getClientId());
+            ResultSet rs = pst.executeQuery();
+
+            while (rs.next()) {
+                Application app = new Application(client);
+                app.setapplicationNumber(rs.getString("application_no"));
+                app.setSubmittedDate(rs.getTimestamp("submitted_date"));
+                app.setNeedsDrilling(rs.getBoolean("needs_drilling"));
+                app.setNeedsPlumbing(rs.getBoolean("needs_plumbing"));
+                app.setNeedsPump(rs.getBoolean("needs_pump"));
+                app.setNeedsTank(rs.getBoolean("needs_tank"));
+                app.setTotal(rs.getDouble("estimated_cost"));
+                app.setStatus(Status.valueOf(rs.getString("status").toUpperCase()));
+                applications.add(app);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage());
+            e.printStackTrace();
+        }
+        return applications;
     }
 }

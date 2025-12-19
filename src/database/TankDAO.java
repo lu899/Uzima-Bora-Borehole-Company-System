@@ -43,4 +43,19 @@ public class TankDAO {
         }
         return tankInstallation;
     }
+    
+    public static int countTankInstallations(){
+        String selectSQL = "SELECT COUNT(*) AS total FROM tank_installation WHERE month(installation_date) = month(curdate())";
+
+        try (Statement stmt = con.createStatement()) {
+            ResultSet rs = stmt.executeQuery(selectSQL);
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage());
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }

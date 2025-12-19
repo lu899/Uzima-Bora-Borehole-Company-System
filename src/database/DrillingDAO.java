@@ -51,4 +51,19 @@ public class DrillingDAO {
         }
         return drillingServices;
     }
+
+    public static int countDrillingServices(){
+        String selectSQL = "SELECT COUNT(*) AS total FROM drilling_services WHERE month(service_date) = month(curdate())";
+
+        try (Statement stmt = con.createStatement()) {
+            ResultSet rs = stmt.executeQuery(selectSQL);
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage());
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }

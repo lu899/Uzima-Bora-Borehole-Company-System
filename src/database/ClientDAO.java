@@ -88,6 +88,30 @@ public class ClientDAO {
         return null;
     }
 
+    public Client getClientById(int id){
+        String selectSQL = "SELECT * FROM clients WHERE client_id = ?";
+
+        try (PreparedStatement pst = con.prepareStatement(selectSQL)) {
+            pst.setInt(1, id);
+            ResultSet rs = pst.executeQuery();
+
+            if(rs.next()){
+                ClientCategory category = ClientCategory.valueOf(rs.getString("client_category").toUpperCase());
+                Client user = new Client(rs.getString("name"), 
+                                        rs.getString("address"), 
+                                        rs.getString("telephone"), 
+                                        rs.getString("email"), 
+                                        rs.getString("borehole_location"),
+                                        category
+                                    );
+                return user;                   
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "User not found!", "Failure", JOptionPane.WARNING_MESSAGE);
+        }
+        return null;
+    }
+    
     public List<Client> getClients(){
         String selectSQL = "SELECT * FROM clients";
 
@@ -113,6 +137,22 @@ public class ClientDAO {
         }
 
         return clients;
+    }
+
+    public int countClients(){
+        String countSQL = "SELECT COUNT(*) AS total FROM clients";
+
+        try (Statement stmt = con.createStatement()) {
+            ResultSet rs = stmt.executeQuery(countSQL);
+
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage());
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     public boolean deleteClient(int clientId){

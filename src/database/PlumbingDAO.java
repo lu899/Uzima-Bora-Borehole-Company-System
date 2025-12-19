@@ -31,7 +31,7 @@ public class PlumbingDAO {
 
     public static List<Service> getPlumbingServicesByClient(int clientId){
         List<Service> plumbingServices = new ArrayList<>();
-        String selectSQL = "SELECT * FROM plumbing_services WHERE client_id = ?";
+        String selectSQL = "SELECT * FROM plumbing_service WHERE client_id = ?";
         try (PreparedStatement pst = con.prepareStatement(selectSQL)) {
             pst.setInt(1, clientId);
             ResultSet rs = pst.executeQuery();
@@ -51,5 +51,20 @@ public class PlumbingDAO {
            JOptionPane.showMessageDialog(null,"Error getting plumbing Services " + e.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
         }
         return plumbingServices;
+    }
+
+    public static int countPlumbingServices(){
+        String selectSQL = "SELECT COUNT(*) AS total FROM plumbing_service WHERE month(service_date) = month(curdate())";
+
+        try (Statement stmt = con.createStatement()) {
+            ResultSet rs = stmt.executeQuery(selectSQL);
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage());
+            e.printStackTrace();
+        }
+        return 0;
     }
 }

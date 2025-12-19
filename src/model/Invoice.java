@@ -6,7 +6,7 @@ import java.util.*;
 public class Invoice {
     private int invoiceId;
     private String invoiceNumber;
-    private int clientId;
+    private Client client;
     private double surveyFees;
     private double localAuthorityFees;
     private double drillingTotal;
@@ -19,6 +19,7 @@ public class Invoice {
     private LocalDate invoiceDate;
     private PaymentStatus paymentStatus;
     private double amountPaid;
+    private String serviceType;
 
     private List<Service> drillingServices;
     private List<Service> pumpInstallations;
@@ -42,7 +43,7 @@ public class Invoice {
     }
 
     public Invoice(Client client){
-        this.clientId = client.getClientId();
+        this.client = client;
         this.surveyFees = client.getClientCategory().getSurveyFees();
         this.localAuthorityFees = client.getClientCategory().getLocalAuthorityFees();
         this.invoiceDate = LocalDate.now();
@@ -163,12 +164,28 @@ public class Invoice {
         return invoiceId;
     }
 
-    public void setClientId(int clientId){
-        this.clientId = clientId;
+    public void setInvoiceNubmer(String num){
+        this.invoiceNumber = num;
+    }
+
+    public String getInvoiceNumber(){
+        return invoiceNumber;
+    }
+
+    public void setClient(Client client){
+        this.client = client;
     }
     
-    public int getClientId(){
-        return clientId;
+    public Client getClient(){
+        return client;
+    }
+
+    public void setAmountPaid(double amountPaid){
+        this.amountPaid = amountPaid;
+    }
+
+    public double getAmountPaid(){
+        return amountPaid;
     }
 
     public double getSurveyFees(){
@@ -189,16 +206,34 @@ public class Invoice {
     public double getTankTotal(){
         return tankTotal;
     }
+
+    public void setServiceType(String type){
+        this.serviceType = type;
+    }
+
+    public String getServiceType(){
+        return serviceType;
+    }
     public double getPlumbingTotal(){
         return plumbingTotal;
     }
     public double getGrandTotal(){
         return grandTotal;
     }
+    public void setGrandTotal(double total){
+        this.grandTotal = total;
+    }
     public void setInvoiceDate(LocalDate date){
         this.invoiceDate = date;
     }
     public LocalDate getInvoiceDate(){
         return invoiceDate;
+    }
+    public void setStatus(PaymentStatus status){
+        this.paymentStatus = status;
+    }
+
+    public PaymentStatus getPaymentStatus(){
+        return paymentStatus;
     }
 }
